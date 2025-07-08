@@ -38,7 +38,7 @@ export function TokenSelector({ selectedToken, tokens, onSelect }: TokenSelector
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-3 py-2 transition-colors"
+        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-3 py-2 transition-colors shrink-0"
       >
         <span className="text-lg">{selectedToken.icon}</span>
         <span className="font-semibold text-white">{selectedToken.symbol}</span>

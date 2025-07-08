@@ -74,13 +74,13 @@ export function SwapModule() {
                 Balance: {fromToken.balance} {fromToken.symbol}
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3">
               <input
                 type="text"
                 placeholder="0.0"
                 value={fromAmount}
                 onChange={(e) => handleFromAmountChange(e.target.value)}
-                className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-white/40 outline-none"
+                className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-white/40 outline-none min-w-0"
               />
               <TokenSelector
                 selectedToken={fromToken}
@@ -108,13 +108,13 @@ export function SwapModule() {
                 Balance: {toToken.balance} {toToken.symbol}
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-3">
               <input
                 type="text"
                 placeholder="0.0"
                 value={toAmount}
                 readOnly
-                className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-white/40 outline-none"
+                className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-white/40 outline-none min-w-0"
               />
               <TokenSelector
                 selectedToken={toToken}
