@@ -1,12 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { ArrowUpDown, Settings, Info } from "lucide-react"
 import { TokenSelector } from "./token-selector"
 import { SwapButton } from "./swap-button"
 import { Token } from '@/config/tokens'
 import { ALL_TOKENS } from '@/config/tokens'
 import { useTokenBalance } from '@/hooks/useTokenBalance'
+import { useCitadelPricing } from '@/hooks/useCitadelPricing'
+import { useCitadelSwap } from '@/hooks/useCitadelSwap'
+import { useTransactionHistory } from '@/hooks/useTransactionHistory'
+import { findCitadelPoolByTokens } from '@/config/citadel-contracts'
 
 function TokenBalanceDisplay({ token }: { token: Token }) {
   const { formattedBalance, isLoading } = useTokenBalance(token);
@@ -26,27 +30,52 @@ export function SwapModule() {
   const [fromToken, setFromToken] = useState<Token>(ALL_TOKENS[0])
   const [toToken, setToToken] = useState<Token>(ALL_TOKENS[1])
   const [fromAmount, setFromAmount] = useState("")
-  const [toAmount, setToAmount] = useState("")
   const [slippage, setSlippage] = useState("0.5")
+
+  // Find the Citadel pool for the selected token pair
+  const citadelPool = useMemo(() => 
+    findCitadelPoolByTokens(fromToken.address, toToken.address), 
+    [fromToken.address, toToken.address]
+  );
+
+  // Get real pricing from Citadel pool
+  const { 
+    outputAmount, 
+    feeAmount, 
+    exchangeRate, 
+    isLoading: isPricingLoading,
+    isMintOperation,
+    isRedeemOperation 
+  } = useCitadelPricing(citadelPool, fromToken, toToken, fromAmount);
+
+  // Swap execution hooks
+  const { executeSwap, approveToken, isPending, isConfirming, isSuccess } = useCitadelSwap();
+  
+  // Transaction history
+  const { transactions, isLoading: historyLoading } = useTransactionHistory(5);
 
   const handleSwapTokens = () => {
     setFromToken(toToken)
     setToToken(fromToken)
-    setFromAmount(toAmount)
-    setToAmount(fromAmount)
+    setFromAmount("")
   }
 
-  const calculateToAmount = (amount: string) => {
-    if (!amount || isNaN(Number(amount))) return ""
-    // Simple 1:1 calculation for demo - in real app you'd use DEX pricing
-    const toValue = Number(amount) * 0.997 // 0.3% fee simulation
-    return toValue.toFixed(6)
-  }
-
-  const handleFromAmountChange = (value: string) => {
-    setFromAmount(value)
-    setToAmount(calculateToAmount(value))
-  }
+  const handleSwap = async () => {
+    if (!citadelPool || !fromAmount || !outputAmount) return;
+    
+    try {
+      await executeSwap(
+        citadelPool,
+        fromToken,
+        toToken,
+        fromAmount,
+        outputAmount,
+        parseFloat(slippage)
+      );
+    } catch (error) {
+      console.error('Swap failed:', error);
+    }
+  };
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -54,7 +83,7 @@ export function SwapModule() {
       <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Swap hello victor</h2>
+          <h2 className="text-2xl font-bold text-white">Swap</h2>
           <div className="flex items-center gap-2">
             <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
               <Settings className="w-5 h-5 text-white/80" />
@@ -77,7 +106,7 @@ export function SwapModule() {
                 type="text"
                 placeholder="0.0"
                 value={fromAmount}
-                onChange={(e) => handleFromAmountChange(e.target.value)}
+                onChange={(e) => setFromAmount(e.target.value)}
                 className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-white/40 outline-none min-w-0"
               />
               <TokenSelector
@@ -86,9 +115,14 @@ export function SwapModule() {
                 onSelect={setFromToken}
               />
             </div>
-            {fromAmount && (
+            {fromAmount && citadelPool && (
               <div className="mt-2 text-sm text-white/60">
-                {fromAmount} {fromToken.symbol}
+                {isMintOperation ? 'Minting' : 'Redeeming'} via {citadelPool.name}
+              </div>
+            )}
+            {fromAmount && !citadelPool && (
+              <div className="mt-2 text-sm text-red-400">
+                No Citadel pool available for this pair
               </div>
             )}
           </div>
@@ -108,7 +142,7 @@ export function SwapModule() {
               <input
                 type="text"
                 placeholder="0.0"
-                value={toAmount}
+                value={isPricingLoading ? 'Loading...' : outputAmount}
                 readOnly
                 className="flex-1 bg-transparent text-2xl font-semibold text-white placeholder-white/40 outline-none min-w-0"
               />
@@ -118,29 +152,35 @@ export function SwapModule() {
                 onSelect={setToToken}
               />
             </div>
-            {toAmount && (
-              <div className="mt-2 text-sm text-white/60">{toAmount} {toToken.symbol}</div>
+            {outputAmount && Number(outputAmount) > 0 && (
+              <div className="mt-2 text-sm text-white/60">
+                {outputAmount} {toToken.symbol}
+              </div>
             )}
           </div>
         </div>
 
         {/* Swap Details */}
-        {fromAmount && toAmount && (
+        {fromAmount && outputAmount && citadelPool && (
           <div className="mt-4 p-3 bg-white/5 border border-white/10 rounded-xl">
             <div className="flex justify-between text-sm text-white/80 mb-1">
-              <span>Rate</span>
+              <span>Exchange Rate</span>
               <span>
-                1 {fromToken.symbol} = 1 {toToken.symbol} (Demo)
+                1 {fromToken.symbol} = {exchangeRate || '0'} {toToken.symbol}
               </span>
             </div>
             <div className="flex justify-between text-sm text-white/80 mb-1">
-              <span>Fee (0.3%)</span>
+              <span>Protocol Fee</span>
               <span>
-                {(Number(fromAmount) * 0.003).toFixed(6)} {fromToken.symbol}
+                {Number(feeAmount).toFixed(6)} {fromToken.symbol}
               </span>
             </div>
+            <div className="flex justify-between text-sm text-white/80 mb-1">
+              <span>Operation</span>
+              <span>{isMintOperation ? 'Mint Synthetic' : 'Redeem Collateral'}</span>
+            </div>
             <div className="flex justify-between text-sm text-white/80">
-              <span>Slippage</span>
+              <span>Slippage Tolerance</span>
               <span>{slippage}%</span>
             </div>
           </div>
@@ -148,33 +188,61 @@ export function SwapModule() {
 
         {/* Swap Action Button */}
         <button
-          disabled={!fromAmount || !toAmount}
+          onClick={handleSwap}
+          disabled={!fromAmount || !outputAmount || !citadelPool || isPending || isConfirming || isPricingLoading}
           className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
         >
-          {!fromAmount || !toAmount ? "Enter an amount" : `Swap ${fromToken.symbol} for ${toToken.symbol}`}
+          {isPending || isConfirming 
+            ? (isPending ? 'Confirming...' : 'Processing...') 
+            : !fromAmount || !outputAmount
+            ? "Enter an amount"
+            : !citadelPool
+            ? "Pool not available"
+            : `${isMintOperation ? 'Mint' : 'Redeem'} ${toToken.symbol}`
+          }
         </button>
       </div>
 
       {/* Recent Transactions */}
       <div className="mt-6 backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-4">
         <h3 className="text-lg font-semibold text-white mb-3">Recent Activity</h3>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                <ArrowUpDown className="w-4 h-4 text-green-400" />
+        {historyLoading ? (
+          <div className="text-center py-4 text-white/60">Loading transactions...</div>
+        ) : transactions.length > 0 ? (
+          <div className="space-y-2">
+            {transactions.map((tx) => (
+              <div key={tx.hash} className="flex items-center justify-between p-3 bg-white/5 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    tx.type === 'mint' ? 'bg-green-500/20' : 'bg-blue-500/20'
+                  }`}>
+                    <ArrowUpDown className={`w-4 h-4 ${
+                      tx.type === 'mint' ? 'text-green-400' : 'text-blue-400'
+                    }`} />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">
+                      {tx.type === 'mint' ? 'Minted' : 'Redeemed'} {tx.poolSymbol}
+                    </div>
+                    <div className="text-white/60 text-sm">
+                      {new Date(tx.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-white">
+                    {tx.type === 'mint' ? tx.syntheticAmount : tx.collateralAmount} {tx.type === 'mint' ? tx.poolSymbol : tx.collateralSymbol}
+                  </div>
+                  <div className="text-white/60 text-sm">
+                    Fee: {Number(tx.feeAmount).toFixed(4)}
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-white font-medium">Swapped ETH → USDC</div>
-                <div className="text-white/60 text-sm">2 minutes ago</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-white">1.5 ETH</div>
-              <div className="text-white/60 text-sm">$3,510.75</div>
-            </div>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-4 text-white/60">No recent transactions</div>
+        )}
       </div>
     </div>
   )

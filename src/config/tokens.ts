@@ -28,22 +28,26 @@ export const BSC_TOKENS: Token[] = [
     symbol: 'DAI',
     decimals: 18,
   },
+];
+
+// Citadel synthetic tokens - update with your actual deployed addresses
+export const CITADEL_SYNTHETIC_TOKENS: Token[] = [
   {
-    address: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
-    name: 'PancakeSwap Token',
-    symbol: 'CAKE',
+    address: '0x0000000000000000000000000000000000000002',
+    name: 'Citadel EUR',
+    symbol: 'cEUR',
     decimals: 18,
   },
   {
-    address: '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
-    name: 'Ethereum Token',
-    symbol: 'ETH',
+    address: '0x0000000000000000000000000000000000000004',
+    name: 'Citadel USD',
+    symbol: 'cUSD',
     decimals: 18,
   },
   {
-    address: '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c',
-    name: 'Bitcoin Token',
-    symbol: 'BTCB',
+    address: '0x0000000000000000000000000000000000000006',
+    name: 'Citadel Gold',
+    symbol: 'cGOLD',
     decimals: 18,
   },
 ];
@@ -56,4 +60,4 @@ export const BNB_TOKEN: Token = {
   decimals: 18,
 };
 
-export const ALL_TOKENS = [BNB_TOKEN, ...BSC_TOKENS];
+export const ALL_TOKENS = [BNB_TOKEN, ...BSC_TOKENS, ...CITADEL_SYNTHETIC_TOKENS];
