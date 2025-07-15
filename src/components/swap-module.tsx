@@ -4,27 +4,27 @@ import { useState } from "react"
 import { ArrowUpDown, Settings, Info } from "lucide-react"
 import { TokenSelector } from "./token-selector"
 import { SwapButton } from "./swap-button"
+import { Token } from '@/config/tokens'
+import { ALL_TOKENS } from '@/config/tokens'
+import { useTokenBalance } from '@/hooks/useTokenBalance'
 
-interface Token {
-  symbol: string
-  name: string
-  icon: string
-  balance: string
-  price: number
+function TokenBalanceDisplay({ token }: { token: Token }) {
+  const { formattedBalance, isLoading } = useTokenBalance(token);
+  
+  if (isLoading) {
+    return <span className="text-sm text-white/60">Loading...</span>;
+  }
+  
+  return (
+    <span className="text-sm text-white/60">
+      Balance: {parseFloat(formattedBalance).toFixed(4)} {token.symbol}
+    </span>
+  );
 }
 
-const tokens: Token[] = [
-  { symbol: "ETH", name: "Ethereum", icon: "⟠", balance: "2.5431", price: 2340.5 },
-  { symbol: "USDC", name: "USD Coin", icon: "💵", balance: "1,250.00", price: 1.0 },
-  { symbol: "USDT", name: "Tether", icon: "₮", balance: "500.00", price: 0.999 },
-  { symbol: "DAI", name: "Dai Stablecoin", icon: "◈", balance: "750.25", price: 1.001 },
-  { symbol: "WBTC", name: "Wrapped Bitcoin", icon: "₿", balance: "0.1234", price: 43250.0 },
-  { symbol: "UNI", name: "Uniswap", icon: "🦄", balance: "125.50", price: 6.75 },
-]
-
 export function SwapModule() {
-  const [fromToken, setFromToken] = useState<Token>(tokens[0])
-  const [toToken, setToToken] = useState<Token>(tokens[1])
+  const [fromToken, setFromToken] = useState<Token>(ALL_TOKENS[0])
+  const [toToken, setToToken] = useState<Token>(ALL_TOKENS[1])
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
   const [slippage, setSlippage] = useState("0.5")
@@ -38,9 +38,9 @@ export function SwapModule() {
 
   const calculateToAmount = (amount: string) => {
     if (!amount || isNaN(Number(amount))) return ""
-    const fromValue = Number(amount) * fromToken.price
-    const toValue = fromValue / toToken.price
-    return (toValue * 0.997).toFixed(6) // 0.3% fee simulation
+    // Simple 1:1 calculation for demo - in real app you'd use DEX pricing
+    const toValue = Number(amount) * 0.997 // 0.3% fee simulation
+    return toValue.toFixed(6)
   }
 
   const handleFromAmountChange = (value: string) => {
@@ -70,9 +70,7 @@ export function SwapModule() {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-white/60">From</span>
-              <span className="text-sm text-white/60">
-                Balance: {fromToken.balance} {fromToken.symbol}
-              </span>
+              <TokenBalanceDisplay token={fromToken} />
             </div>
             <div className="flex items-center justify-between gap-3">
               <input
@@ -84,13 +82,13 @@ export function SwapModule() {
               />
               <TokenSelector
                 selectedToken={fromToken}
-                tokens={tokens.filter((t) => t.symbol !== toToken.symbol)}
+                tokens={ALL_TOKENS.filter((t) => t.symbol !== toToken.symbol)}
                 onSelect={setFromToken}
               />
             </div>
             {fromAmount && (
               <div className="mt-2 text-sm text-white/60">
-                ≈ ${(Number(fromAmount) * fromToken.price).toLocaleString()}
+                {fromAmount} {fromToken.symbol}
               </div>
             )}
           </div>
@@ -104,9 +102,7 @@ export function SwapModule() {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-white/60">To</span>
-              <span className="text-sm text-white/60">
-                Balance: {toToken.balance} {toToken.symbol}
-              </span>
+              <TokenBalanceDisplay token={toToken} />
             </div>
             <div className="flex items-center justify-between gap-3">
               <input
@@ -118,12 +114,12 @@ export function SwapModule() {
               />
               <TokenSelector
                 selectedToken={toToken}
-                tokens={tokens.filter((t) => t.symbol !== fromToken.symbol)}
+                tokens={ALL_TOKENS.filter((t) => t.symbol !== fromToken.symbol)}
                 onSelect={setToToken}
               />
             </div>
             {toAmount && (
-              <div className="mt-2 text-sm text-white/60">≈ ${(Number(toAmount) * toToken.price).toLocaleString()}</div>
+              <div className="mt-2 text-sm text-white/60">{toAmount} {toToken.symbol}</div>
             )}
           </div>
         </div>
@@ -134,7 +130,7 @@ export function SwapModule() {
             <div className="flex justify-between text-sm text-white/80 mb-1">
               <span>Rate</span>
               <span>
-                1 {fromToken.symbol} = {(fromToken.price / toToken.price).toFixed(4)} {toToken.symbol}
+                1 {fromToken.symbol} = 1 {toToken.symbol} (Demo)
               </span>
             </div>
             <div className="flex justify-between text-sm text-white/80 mb-1">

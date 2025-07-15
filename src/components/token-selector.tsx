@@ -2,13 +2,36 @@
 
 import { useState } from "react"
 import { ChevronDown, Search, X } from "lucide-react"
+import { Token } from '@/config/tokens'
+import { useTokenBalance } from '@/hooks/useTokenBalance'
 
-interface Token {
-  symbol: string
-  name: string
-  icon: string
+interface TokenWithBalance extends Token {
   balance: string
-  price: number
+  formattedBalance: string
+}
+
+function TokenItem({ token, onSelect }: { token: Token; onSelect: (token: Token) => void }) {
+  const { formattedBalance, isLoading } = useTokenBalance(token);
+  
+  return (
+    <button
+      onClick={() => onSelect(token)}
+      className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors"
+    >
+      <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+        <span className="text-white font-bold text-sm">{token.symbol[0]}</span>
+      </div>
+      <div className="flex-1 text-left">
+        <div className="font-semibold text-white">{token.symbol}</div>
+        <div className="text-sm text-white/60">{token.name}</div>
+      </div>
+      <div className="text-right">
+        <div className="text-white">
+          {isLoading ? '...' : parseFloat(formattedBalance).toFixed(4)}
+        </div>
+      </div>
+    </button>
+  );
 }
 
 interface TokenSelectorProps {
@@ -40,7 +63,9 @@ export function TokenSelector({ selectedToken, tokens, onSelect }: TokenSelector
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-3 py-2 transition-colors shrink-0 cursor-pointer"
       >
-        <span className="text-lg">{selectedToken.icon}</span>
+        <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+          <span className="text-white font-bold text-xs">{selectedToken.symbol[0]}</span>
+        </div>
         <span className="font-semibold text-white">{selectedToken.symbol}</span>
         <ChevronDown className="w-4 h-4 text-white/60" />
       </button>
@@ -78,21 +103,11 @@ export function TokenSelector({ selectedToken, tokens, onSelect }: TokenSelector
             {/* Token List */}
             <div className="max-h-80 overflow-y-auto">
               {filteredTokens.map((token) => (
-                <button
+                <TokenItem
                   key={token.symbol}
-                  onClick={() => handleSelect(token)}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors"
-                >
-                  <span className="text-2xl">{token.icon}</span>
-                  <div className="flex-1 text-left">
-                    <div className="font-semibold text-white">{token.symbol}</div>
-                    <div className="text-sm text-white/60">{token.name}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-white">{token.balance}</div>
-                    <div className="text-sm text-white/60">${token.price.toLocaleString()}</div>
-                  </div>
-                </button>
+                  token={token}
+                  onSelect={handleSelect}
+                />
               ))}
             </div>
           </div>
