@@ -54,7 +54,7 @@ export function SwapModule() {
       <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Swap</h2>
+          <h2 className="text-2xl font-bold text-white">Swap hello victor</h2>
           <div className="flex items-center gap-2">
             <button className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
               <Settings className="w-5 h-5 text-white/80" />

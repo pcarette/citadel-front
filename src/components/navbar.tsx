@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Wallet } from "lucide-react"
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 
 export function Navbar() {
   return (
@@ -24,10 +24,7 @@ export function Navbar() {
           <Link href="/stake" className="text-white/80 hover:text-white transition-colors">
             Stake
           </Link>
-          <button className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-4 py-2 rounded-xl transition-all duration-300">
-            <Wallet className="w-4 h-4" />
-            <span>Connect Wallet</span>
-          </button>
+          <ConnectButton />
         </div>
 
         {/* Mobile menu button */}

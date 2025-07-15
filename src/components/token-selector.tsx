@@ -38,7 +38,7 @@ export function TokenSelector({ selectedToken, tokens, onSelect }: TokenSelector
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-3 py-2 transition-colors shrink-0"
+        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl px-3 py-2 transition-colors shrink-0 cursor-pointer"
       >
         <span className="text-lg">{selectedToken.icon}</span>
         <span className="font-semibold text-white">{selectedToken.symbol}</span>
@@ -47,8 +47,12 @@ export function TokenSelector({ selectedToken, tokens, onSelect }: TokenSelector
 
       {/* Modal Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+        <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 rounded-xl"
+        >
+          <div 
+          onBlur={() => setIsOpen(false)}
+          className="bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <h3 className="text-lg font-semibold text-white">Select Token</h3>
