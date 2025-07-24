@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { ArrowUpDown, Settings, Info } from "lucide-react"
 import { TokenSelector } from "./token-selector"
 import { SwapButton } from "./swap-button"
@@ -10,7 +10,9 @@ import { useTokenBalance } from '@/hooks/useTokenBalance'
 import { useCitadelPricing } from '@/hooks/useCitadelPricing'
 import { useCitadelSwap } from '@/hooks/useCitadelSwap'
 import { useTransactionHistory } from '@/hooks/useTransactionHistory'
+import { useErrorHandler } from '@/hooks/useErrorHandler'
 import { findCitadelPoolByTokens } from '@/config/citadel-contracts'
+import { Alert } from './ui/alert'
 
 function TokenBalanceDisplay({ token }: { token: Token }) {
   const { formattedBalance, isLoading } = useTokenBalance(token);
@@ -48,11 +50,36 @@ export function SwapModule() {
     isRedeemOperation 
   } = useCitadelPricing(citadelPool, fromToken, toToken, fromAmount);
 
+  // Error handling
+  const { errors, removeError, addError, addSuccess } = useErrorHandler();
+  
   // Swap execution hooks
-  const { executeSwap, approveToken, isPending, isConfirming, isSuccess } = useCitadelSwap();
+  const { executeSwap, approveToken, isPending, isConfirming, isSuccess, isTransactionError, error, transactionError, hash } = useCitadelSwap();
   
   // Transaction history
   const { transactions, isLoading: historyLoading } = useTransactionHistory(5);
+
+  // Handle transaction states
+  useEffect(() => {
+    if (error) {
+      addError(error, 'Transaction Preparation');
+    }
+  }, [error, addError]);
+
+  useEffect(() => {
+    if (isTransactionError && transactionError) {
+      addError(transactionError, 'Transaction');
+    }
+  }, [isTransactionError, transactionError, addError]);
+
+  useEffect(() => {
+    if (isSuccess && hash) {
+      addSuccess(
+        `Transaction completed successfully. Hash: ${hash.slice(0, 10)}...`,
+        'Transaction Successful'
+      );
+    }
+  }, [isSuccess, hash, addSuccess]);
 
   const handleSwapTokens = () => {
     setFromToken(toToken)
@@ -73,12 +100,31 @@ export function SwapModule() {
         parseFloat(slippage)
       );
     } catch (error) {
-      console.error('Swap failed:', error);
+      addError(error, 'Swap Execution');
     }
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
+      {/* Error/Success Alerts */}
+      {errors.length > 0 && (
+        <div className="space-y-3 mb-6">
+          {errors.map((error) => (
+            <Alert
+              key={error.id}
+              variant={error.variant === 'info' ? 'success' : error.variant}
+              title={error.title}
+              dismissible={error.dismissible}
+              autoClose={error.autoClose}
+              duration={error.duration}
+              onClose={() => removeError(error.id)}
+            >
+              {error.message}
+            </Alert>
+          ))}
+        </div>
+      )}
+
       {/* Main Swap Card */}
       <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-6 shadow-2xl">
         {/* Header */}
