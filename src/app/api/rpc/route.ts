@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const RPC_URL = process.env.NEXT_PUBLIC_BSC_FORK_RPC_URL || 'http://127.0.0.1:46500';
+// BSC Testnet RPC URL
+const RPC_URL = 'https://data-seed-prebsc-1-s1.bnbchain.org:8545';
 
 export async function POST(request: NextRequest) {
   try {

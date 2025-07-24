@@ -1,4 +1,5 @@
 import { Address } from 'viem';
+import { CONTRACT_ADDRESSES } from './contracts';
 
 export interface Token {
   address: Address;
@@ -28,12 +29,18 @@ export const BSC_TOKENS: Token[] = [
     symbol: 'DAI',
     decimals: 18,
   },
+  {
+    address: CONTRACT_ADDRESSES.collateral,
+    name: 'First Digital USD',
+    symbol: 'FDUSD',
+    decimals: 18,
+  },
 ];
 
 // Citadel synthetic tokens - update with your actual deployed addresses
 export const CITADEL_SYNTHETIC_TOKENS: Token[] = [
   {
-    address: '0x0000000000000000000000000000000000000002',
+    address: '0x0B5e46027B856E6109E9817C37ddaB1796331E56',
     name: 'Citadel EUR',
     symbol: 'cEUR',
     decimals: 18,

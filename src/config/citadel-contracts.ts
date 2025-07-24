@@ -1,4 +1,5 @@
 import { Address } from 'viem';
+import { CONTRACT_ADDRESSES } from './contracts';
 
 // Citadel Multi LP Liquidity Pool ABI
 export const CITADEL_MULTI_LP_POOL_ABI = [
@@ -170,15 +171,15 @@ export interface CitadelPool {
   collateralSymbol: string;
 }
 
-// Example Citadel pools - update with your actual deployed pool addresses
+// Citadel pools using actual deployed addresses
 export const CITADEL_POOLS: CitadelPool[] = [
   {
-    address: '0x0000000000000000000000000000000000000001' as Address, // Update with actual pool address
-    collateralToken: '0x55d398326f99059fF775485246999027B3197955' as Address, // USDT
-    syntheticToken: '0x0000000000000000000000000000000000000002' as Address, // Update with synth token
+    address: CONTRACT_ADDRESSES.pool,
+    collateralToken: CONTRACT_ADDRESSES.collateral, // FDUSD testnet
+    syntheticToken: '0x0B5e46027B856E6109E9817C37ddaB1796331E56' as Address, // Citadel EUR token
     name: 'Citadel EUR Pool',
     symbol: 'cEUR',
-    collateralSymbol: 'USDT',
+    collateralSymbol: 'FDUSD',
   },
   {
     address: '0x0000000000000000000000000000000000000003' as Address, // Update with actual pool address
