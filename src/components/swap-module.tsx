@@ -11,10 +11,11 @@ import { useCitadelPricing } from '@/hooks/useCitadelPricing'
 import { useCitadelSwap } from '@/hooks/useCitadelSwap'
 import { useTransactionHistory } from '@/hooks/useTransactionHistory'
 import { useErrorHandler } from '@/hooks/useErrorHandler'
-import { findCitadelPoolByTokens } from '@/config/citadel-contracts'
+import { useTokenAllowance } from '@/hooks/useTokenAllowance'
+import { findCitadelPoolByTokens, isMintOperation } from '@/config/citadel-contracts'
 import { Alert } from './ui/alert'
 
-function TokenBalanceDisplay({ token }: { token: Token }) {
+function TokenBalanceDisplay({ token, onMaxClick }: { token: Token; onMaxClick?: (balance: string) => void }) {
   const { formattedBalance, isLoading } = useTokenBalance(token);
   
   if (isLoading) {
@@ -22,9 +23,19 @@ function TokenBalanceDisplay({ token }: { token: Token }) {
   }
   
   return (
-    <span className="text-sm text-white/60">
-      Balance: {parseFloat(formattedBalance).toFixed(4)} {token.symbol}
-    </span>
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-white/60">
+        Balance: {parseFloat(formattedBalance).toFixed(4)} {token.symbol}
+      </span>
+      {onMaxClick && (
+        <button
+          onClick={() => onMaxClick(formattedBalance)}
+          className="px-2 py-1 text-xs font-medium text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 rounded border border-blue-500/20 hover:border-blue-500/30 transition-colors cursor-pointer"
+        >
+          Max
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -46,8 +57,8 @@ export function SwapModule() {
     feeAmount, 
     exchangeRate, 
     isLoading: isPricingLoading,
-    isMintOperation,
-    isRedeemOperation 
+    isMintOperation: isMinting,
+    isRedeemOperation: isRedeeming 
   } = useCitadelPricing(citadelPool, fromToken, toToken, fromAmount);
 
   // Error handling
@@ -55,6 +66,23 @@ export function SwapModule() {
   
   // Swap execution hooks
   const { executeSwap, approveToken, isPending, isConfirming, isSuccess, isTransactionError, error, transactionError, hash } = useCitadelSwap();
+  
+  // Check allowance for FDUSD when minting (fromToken is FDUSD)
+  const needsAllowanceCheck = citadelPool && fromAmount && isMintOperation(fromToken.address, toToken.address, citadelPool);
+  const { 
+    allowance,
+    isLoading: allowanceLoading, 
+    checkSufficientAllowance, 
+    getMissingAllowance,
+    refetch: refetchAllowance 
+  } = useTokenAllowance(
+    needsAllowanceCheck ? fromToken.address : undefined,
+    needsAllowanceCheck ? citadelPool.address : undefined,
+    needsAllowanceCheck
+  );
+
+  const hasSufficientAllowance = needsAllowanceCheck ? checkSufficientAllowance(fromAmount, fromToken.decimals) : true;
+  const missingAllowance = needsAllowanceCheck ? getMissingAllowance(fromAmount, fromToken.decimals) : '0';
   
   // Transaction history
   const { transactions, isLoading: historyLoading } = useTransactionHistory(5);
@@ -78,8 +106,15 @@ export function SwapModule() {
         `Transaction completed successfully. Hash: ${hash.slice(0, 10)}...`,
         'Transaction Successful'
       );
+      
+      // Refetch allowance after successful transaction
+      if (needsAllowanceCheck) {
+        setTimeout(() => {
+          refetchAllowance();
+        }, 2000);
+      }
     }
-  }, [isSuccess, hash, addSuccess]);
+  }, [isSuccess, hash, addSuccess, needsAllowanceCheck, refetchAllowance]);
 
   const handleSwapTokens = () => {
     setFromToken(toToken)
@@ -87,8 +122,42 @@ export function SwapModule() {
     setFromAmount("")
   }
 
+  const handleMaxClick = (balance: string) => {
+    setFromAmount(balance);
+  }
+
+  const handleApproval = async () => {
+    if (!citadelPool || !fromAmount || !needsAllowanceCheck) return;
+    
+    try {
+      await approveToken(
+        fromToken.address,
+        citadelPool.address,
+        fromAmount,
+        fromToken.decimals
+      );
+      
+      // Refetch allowance after approval
+      setTimeout(() => {
+        refetchAllowance();
+      }, 2000);
+      
+    } catch (error) {
+      addError(error, 'Token Approval');
+    }
+  };
+
   const handleSwap = async () => {
     if (!citadelPool || !fromAmount || !outputAmount) return;
+    
+    // Check allowance before swap for mint operations
+    if (needsAllowanceCheck && !hasSufficientAllowance) {
+      addError(
+        new Error(`Insufficient allowance. You need to approve ${missingAllowance} more ${fromToken.symbol}`),
+        'Insufficient Allowance'
+      );
+      return;
+    }
     
     try {
       await executeSwap(
@@ -145,7 +214,7 @@ export function SwapModule() {
           <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-white/60">From</span>
-              <TokenBalanceDisplay token={fromToken} />
+              <TokenBalanceDisplay token={fromToken} onMaxClick={handleMaxClick} />
             </div>
             <div className="flex items-center justify-between gap-3">
               <input
@@ -163,7 +232,7 @@ export function SwapModule() {
             </div>
             {fromAmount && citadelPool && (
               <div className="mt-2 text-sm text-white/60">
-                {isMintOperation ? 'Minting' : 'Redeeming'} via {citadelPool.name}
+                {isMinting ? 'Minting' : 'Redeeming'} via {citadelPool.name}
               </div>
             )}
             {fromAmount && !citadelPool && (
@@ -223,30 +292,53 @@ export function SwapModule() {
             </div>
             <div className="flex justify-between text-sm text-white/80 mb-1">
               <span>Operation</span>
-              <span>{isMintOperation ? 'Mint Synthetic' : 'Redeem Collateral'}</span>
+              <span>{isMinting ? 'Mint Synthetic' : 'Redeem Collateral'}</span>
             </div>
-            <div className="flex justify-between text-sm text-white/80">
+            <div className="flex justify-between text-sm text-white/80 mb-1">
               <span>Slippage Tolerance</span>
               <span>{slippage}%</span>
             </div>
+            {needsAllowanceCheck && (
+              <div className="flex justify-between text-sm text-white/80">
+                <span>Allowance Status</span>
+                <span className={hasSufficientAllowance ? 'text-green-400' : 'text-orange-400'}>
+                  {allowanceLoading ? 'Checking...' : hasSufficientAllowance ? 'Sufficient' : `Need ${missingAllowance} more`}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Swap Action Button */}
-        <button
-          onClick={handleSwap}
-          disabled={!fromAmount || !outputAmount || !citadelPool || isPending || isConfirming || isPricingLoading}
-          className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
-        >
-          {isPending || isConfirming 
-            ? (isPending ? 'Confirming...' : 'Processing...') 
-            : !fromAmount || !outputAmount
-            ? "Enter an amount"
-            : !citadelPool
-            ? "Pool not available"
-            : `${isMintOperation ? 'Mint' : 'Redeem'} ${toToken.symbol}`
-          }
-        </button>
+        {/* Approval/Swap Action Buttons */}
+        {needsAllowanceCheck && !hasSufficientAllowance && fromAmount && outputAmount && citadelPool ? (
+          <button
+            onClick={handleApproval}
+            disabled={isPending || isConfirming || allowanceLoading}
+            className="w-full mt-6 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-orange-500/25"
+          >
+            {isPending || isConfirming 
+              ? (isPending ? 'Confirming...' : 'Processing...') 
+              : `Approve ${fromToken.symbol}`
+            }
+          </button>
+        ) : (
+          <button
+            onClick={handleSwap}
+            disabled={!fromAmount || !outputAmount || !citadelPool || isPending || isConfirming || isPricingLoading || allowanceLoading}
+            className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+          >
+            {isPending || isConfirming 
+              ? (isPending ? 'Confirming...' : 'Processing...') 
+              : !fromAmount || !outputAmount
+              ? "Enter an amount"
+              : !citadelPool
+              ? "Pool not available"
+              : allowanceLoading
+              ? "Checking allowance..."
+              : `${isMinting ? 'Mint' : 'Redeem'} ${toToken.symbol}`
+            }
+          </button>
+        )}
       </div>
 
       {/* Recent Transactions */}

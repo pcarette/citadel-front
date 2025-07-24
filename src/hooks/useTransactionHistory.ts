@@ -17,31 +17,50 @@ export interface Transaction {
   collateralSymbol: string;
 }
 
-// Event signatures for Citadel pools (you'll need to update these based on your actual events)
-const CITADEL_EVENTS = {
-  // Mint event: when user mints synthetic tokens
-  Mint: {
-    inputs: [
-      { indexed: true, name: 'user', type: 'address' },
-      { indexed: false, name: 'collateralAmount', type: 'uint256' },
-      { indexed: false, name: 'syntheticAmount', type: 'uint256' },
-      { indexed: false, name: 'feeAmount', type: 'uint256' },
-    ],
-    name: 'Mint',
-    type: 'event',
-  },
-  // Redeem event: when user redeems collateral
-  Redeem: {
-    inputs: [
-      { indexed: true, name: 'user', type: 'address' },
-      { indexed: false, name: 'syntheticAmount', type: 'uint256' },
-      { indexed: false, name: 'collateralAmount', type: 'uint256' },
-      { indexed: false, name: 'feeAmount', type: 'uint256' },
-    ],
-    name: 'Redeem', 
-    type: 'event',
-  },
-} as const;
+// Event signatures for Citadel pools
+  const CITADEL_EVENTS = {
+    // Minted event: when user mints synthetic tokens
+    Minted: {
+      inputs: [
+        { indexed: true, name: 'user', type: 'address' },
+        {
+          indexed: false,
+          name: 'mintvalues',
+          type: 'tuple',
+          components: [
+            { name: 'totalCollateral', type: 'uint256' },
+            { name: 'exchangeAmount', type: 'uint256' },
+            { name: 'feeAmount', type: 'uint256' },
+            { name: 'numTokens', type: 'uint256' }
+          ]
+        },
+        { indexed: false, name: 'recipient', type: 'address' }
+      ],
+      name: 'Minted',
+      type: 'event',
+    },
+    // Redeemed event: when user redeems collateral
+    Redeemed: {
+      inputs: [
+        { indexed: true, name: 'user', type: 'address' },
+        {
+          indexed: false,
+          name: 'redeemvalues',
+          type: 'tuple',
+          components: [
+            { name: 'numTokens', type: 'uint256' },
+            { name: 'exchangeAmount', type: 'uint256' },
+            { name: 'feeAmount', type: 'uint256' },
+            { name: 'collateralAmount', type: 'uint256' }
+          ]
+        },
+        { indexed: false, name: 'recipient', type: 'address' }
+      ],
+      name: 'Redeemed',
+      type: 'event',
+    },
+  } as const;
+
 
 export function useTransactionHistory(limit: number = 10) {
   const { address } = useAccount();

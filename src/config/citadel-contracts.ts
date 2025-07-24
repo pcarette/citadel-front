@@ -171,7 +171,7 @@ export interface CitadelPool {
   collateralSymbol: string;
 }
 
-// Citadel pools using actual deployed addresses
+// Citadel pools - only FDUSD/cEUR pool
 export const CITADEL_POOLS: CitadelPool[] = [
   {
     address: CONTRACT_ADDRESSES.pool,
@@ -180,22 +180,6 @@ export const CITADEL_POOLS: CitadelPool[] = [
     name: 'Citadel EUR Pool',
     symbol: 'cEUR',
     collateralSymbol: 'FDUSD',
-  },
-  {
-    address: '0x0000000000000000000000000000000000000003' as Address, // Update with actual pool address
-    collateralToken: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d' as Address, // USDC
-    syntheticToken: '0x0000000000000000000000000000000000000004' as Address, // Update with synth token
-    name: 'Citadel USD Pool',
-    symbol: 'cUSD',
-    collateralSymbol: 'USDC',
-  },
-  {
-    address: '0x0000000000000000000000000000000000000005' as Address, // Update with actual pool address
-    collateralToken: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3' as Address, // DAI
-    syntheticToken: '0x0000000000000000000000000000000000000006' as Address, // Update with synth token
-    name: 'Citadel Gold Pool',
-    symbol: 'cGOLD',
-    collateralSymbol: 'DAI',
   },
 ];
 
