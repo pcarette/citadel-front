@@ -67,8 +67,11 @@ export function SwapModule() {
   // Swap execution hooks
   const { executeSwap, approveToken, isPending, isConfirming, isSuccess, isTransactionError, error, transactionError, hash } = useCitadelSwap();
   
-  // Check allowance for FDUSD when minting (fromToken is FDUSD)
-  const needsAllowanceCheck = citadelPool && fromAmount && isMintOperation(fromToken.address, toToken.address, citadelPool);
+  // Check allowance for both mint (FDUSD) and redeem (cEUR) operations
+  const needsAllowanceCheck = citadelPool && fromAmount && (
+    isMintOperation(fromToken.address, toToken.address, citadelPool) || // FDUSD -> cEUR (mint)
+    !isMintOperation(fromToken.address, toToken.address, citadelPool)   // cEUR -> FDUSD (redeem)
+  );
   const { 
     allowance,
     isLoading: allowanceLoading, 
@@ -150,7 +153,7 @@ export function SwapModule() {
   const handleSwap = async () => {
     if (!citadelPool || !fromAmount || !outputAmount) return;
     
-    // Check allowance before swap for mint operations
+    // Check allowance before swap for both mint and redeem operations
     if (needsAllowanceCheck && !hasSufficientAllowance) {
       addError(
         new Error(`Insufficient allowance. You need to approve ${missingAllowance} more ${fromToken.symbol}`),

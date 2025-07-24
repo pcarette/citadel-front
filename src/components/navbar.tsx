@@ -8,9 +8,9 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">D</span>
+            <span className="text-white font-bold text-sm">C</span>
           </div>
-          <span className="text-white font-bold text-xl">DeFiFlow</span>
+          <span className="text-white font-bold text-xl">Citadel</span>
         </Link>
 
         {/* Navigation Links */}
@@ -24,6 +24,14 @@ export function Navbar() {
           <Link href="/stake" className="text-white/80 hover:text-white transition-colors">
             Stake
           </Link>
+          <a 
+            href="https://docs.citadel-finance.xyz" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            Docs
+          </a>
           <ConnectButton />
         </div>
 
