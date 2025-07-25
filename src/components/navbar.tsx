@@ -21,9 +21,6 @@ export function Navbar() {
           <Link href="/pool" className="text-white/80 hover:text-white transition-colors">
             Pool
           </Link>
-          <Link href="/stake" className="text-white/80 hover:text-white transition-colors">
-            Stake
-          </Link>
           <a 
             href="https://docs.citadel-finance.xyz" 
             target="_blank" 

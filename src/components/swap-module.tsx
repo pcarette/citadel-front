@@ -317,7 +317,7 @@ export function SwapModule() {
           <button
             onClick={handleApproval}
             disabled={isPending || isConfirming || allowanceLoading}
-            className="w-full mt-6 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-orange-500/25"
+            className="w-full mt-6 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-orange-500/25 cursor-pointer disabled:cursor-not-allowed"
           >
             {isPending || isConfirming 
               ? (isPending ? 'Confirming...' : 'Processing...') 
@@ -328,7 +328,7 @@ export function SwapModule() {
           <button
             onClick={handleSwap}
             disabled={!fromAmount || !outputAmount || !citadelPool || isPending || isConfirming || isPricingLoading || allowanceLoading}
-            className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
+            className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-500 disabled:to-gray-600 disabled:opacity-50 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-blue-500/25 cursor-pointer disabled:cursor-not-allowed"
           >
             {isPending || isConfirming 
               ? (isPending ? 'Confirming...' : 'Processing...') 
