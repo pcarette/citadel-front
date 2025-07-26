@@ -78,6 +78,34 @@
     "trustedForwarder": {
       "address": "0xaAf2D01e47b2dd03e91e5E2422e77e61DA963C58",
       "key": "TRUSTEDFORWARDER_ADDRESS"
+    },
+    "vaultImplementation": {
+      "address": "0xd4438c02Ed3e56F3F7fCA535Ac967602C0bA4b45",
+      "key": "VAULT_IMPLEMENTATION_ADDRESS"
+    },
+    "vaultFactory": {
+      "address": "0x17FE9FE1d839097a07635f0CE6c6292D422334b2",
+      "key": "VAULT_FACTORY_ADDRESS"
+    },
+    "vaultRegistry": {
+      "address": "0x49D97f8a2f65ec3B0719Fe0a1B83aA50Bd1d593F",
+      "key": "VAULT_REGISTRY_ADDRESS"
+    },
+    "vault1x": {
+      "address": "0x5C9E2E892DF72696392738143DD4272464251cA0",
+      "key": "VAULT_1X_ADDRESS"
+    },
+    "vault5x": {
+      "address": "0xD0118881bc4E6d8b3937495C3343473e4d250041",
+      "key": "VAULT_5X_ADDRESS"
+    },
+    "vault20x": {
+      "address": "0xbeBCe4030848c8B9a37c8bc5C8Af286B4BbaCe8D",
+      "key": "VAULT_20X_ADDRESS"
+    },
+    "faucetLimiter": {
+      "address": "0xF939E4d39B1F30f084047cc33A75719f252efBE0",
+      "key": "FAUCET_LIMITER_ADDRESS"
     }
   }
 }

@@ -21,6 +21,7 @@ export interface ContractAddresses {
   pythAggregator: Address;
   tokenFactory: Address;
   trustedForwarder: Address;
+  faucetLimiter: Address;
 }
 
 export const CONTRACT_ADDRESSES: ContractAddresses = {
@@ -43,6 +44,7 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   pythAggregator: testnetAddresses.contracts.pythAggregator.address as Address,
   tokenFactory: testnetAddresses.contracts.tokenFactory.address as Address,
   trustedForwarder: testnetAddresses.contracts.trustedForwarder.address as Address,
+  faucetLimiter: testnetAddresses.contracts.faucetLimiter.address as Address,
 };
 
 export const NETWORK_INFO = {
