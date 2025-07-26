@@ -177,7 +177,7 @@ export function SwapModule() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div>
       {/* Error/Success Alerts */}
       {errors.length > 0 && (
         <div className="space-y-3 mb-6">

@@ -18,8 +18,8 @@ export function Navbar() {
           <Link href="/swap" className="text-white/80 hover:text-white transition-colors">
             Swap
           </Link>
-          <Link href="/pool" className="text-white/80 hover:text-white transition-colors">
-            Pool
+          <Link href="/pools" className="text-white/80 hover:text-white transition-colors">
+            Pools
           </Link>
           <a 
             href="https://docs.citadel-finance.xyz" 

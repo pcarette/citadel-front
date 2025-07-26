@@ -1,9 +1,8 @@
 import { WebGLBackground } from "@/components/webgl-background"
 import { Navbar } from "@/components/navbar"
-import { SwapModule } from "@/components/swap-module"
-import { FaucetCard } from "@/components/faucet-card"
+import { PoolsModule } from "@/components/pools-module"
 
-export default function SwapPage() {
+export default function PoolsPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* WebGL Animated Background */}
@@ -15,11 +14,8 @@ export default function SwapPage() {
       {/* Content */}
       <div className="relative z-20">
         <Navbar />
-        <main className="min-h-screen flex items-center justify-center px-4 py-20">
-          <div className="w-full max-w-md mx-auto space-y-6">
-            <SwapModule />
-            <FaucetCard />
-          </div>
+        <main className="min-h-screen px-4 py-20">
+          <PoolsModule />
         </main>
       </div>
     </div>
